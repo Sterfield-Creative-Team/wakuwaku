@@ -1,0 +1,102 @@
+.l-footer {
+  //display: flex;
+  //align-items: center;
+  //justify-content: center;
+  width: 100%;
+  height: 30px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  text-align: center;
+
+  &__sns {
+    padding: 90px 0 85px 0;
+    margin: 0 auto;
+
+    &-txt {
+      font-size: 3.5rem;
+
+      &::before {
+        content: '';
+        display: inline-block;
+        height: 25px;
+        width: 20px;
+        background: url('/assets/img/line01.svg') no-repeat;
+        margin-right: 12px;
+      }
+
+      &::after {
+        content: '';
+        display: inline-block;
+        height: 25px;
+        width: 20px;
+        background: url('/assets/img/line02.svg') no-repeat;
+      }
+    }
+
+    &-btn {
+      width: 350px;
+      height: 100px;
+      margin-top: 50px;
+      border-radius: 10px;
+
+      &:first-of-type {
+        background: linear-gradient(0deg, rgba(253,205,108,1) 0%,rgba(222,79,42,1) 30%,rgba(171,28,118,1) 60%,rgba(39,78,156,1) 100%);
+        margin-right: 75px;
+
+        @include media(tab) {
+          margin-right: 20px;
+        }
+
+        @include media(sp) {
+          margin-right: 0;
+        }
+      }
+
+      &:nth-of-type(2) {
+        background-color: #1877F2;
+      }
+    }
+  }
+
+  &__addr {
+    height: 125px;
+    background-color: $c_primary;
+    color: $c_bg;
+    font-size: 2rem;
+    padding: 20px 0;
+
+    @include media (tab) {
+      height: 200px;
+    }
+  }
+
+  &__btn {
+    font-size: 1.8rem;
+    border: 1px solid $c_bg;
+    border-radius: 4px;
+    padding: 2px 16px 2px 24px;
+    margin-top: 10px;
+
+    &::after {
+      content: '';
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      background: url('/assets/img/ico_btn.svg') no-repeat;
+      margin-left: 14px;
+    }
+  }
+
+  &__copyright {
+    padding: 25px 0;
+
+    @include media (sp) {
+      padding: 15px 0;
+    }
+  }
+
+
+  @include media(sp) {
+  }
+}

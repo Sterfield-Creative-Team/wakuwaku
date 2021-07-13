@@ -1,0 +1,36 @@
+extends /_include/_layout.pug
+
+block content
+
+  section.l-mainvisual
+    .swiper-container.mySwiper
+      ul.swiper-wrapper
+        li.swiper-slide
+          img(src="/assets/img/pic_main01.png", alt="")
+        li.swiper-slide
+          img(src="/assets/img/pic_main02.png", alt="")
+      .swiper-pagination
+
+  section.l-products
+    h2.l-products__title Products
+    .l-products__list
+      figure 
+        a(href="#")
+          img.product-img(src="/assets/img/pic_product01.png", alt="青汁")
+        h3.product-title 薩摩桑葉青汁
+        button.product-btn 前往訂購
+      figure 
+        a(href="#")
+          img.product-img(src="/assets/img/pic_product02.png", alt="茶")
+        h3.product-title 薩摩桑葉茶
+        button.product-btn 前往訂購
+
+  section.l-about
+    h3.l-about__title About Wakuwakuen
+    video#video(controls,width="100%")
+      source(src="/assets/img/wakuwakuen_pr_light.mp4", type="video/mp4")
+    #video-btn
+
+
+
+

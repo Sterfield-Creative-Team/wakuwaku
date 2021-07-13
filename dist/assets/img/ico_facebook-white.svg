@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="265.077" height="48.8" viewBox="0 0 265.077 48.8">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        font-size: 42.1px;
+        font-family: Helvetica;
+        letter-spacing: -0.004em;
+      }
+    </style>
+  </defs>
+  <g id="facebookアイコン" transform="translate(-128.694 -693.376)">
+    <path id="パス_299" data-name="パス 299" class="cls-1" d="M393.771,717.924A24.548,24.548,0,1,0,365.4,742.176v-17.16h-6.273v-7.092H365.4l0-5.409c0-6.151,3.644-9.564,9.251-9.564a34.652,34.652,0,0,1,5.474.517v6h-3.075c-3.049,0-4.022,1.908-4.022,3.85l0,4.605h6.819l-1.091,7.092h-5.728v17.16a24.554,24.554,0,0,0,20.73-24.252"/>
+    <text id="Find_us_on" data-name="Find us on" class="cls-2" transform="translate(128.694 731.269)"><tspan x="0" y="0">Find us on</tspan></text>
+  </g>
+</svg>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+html(lang="ja")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    block scripts
+      script(src="/assets/js/common.js")
+    block styles
+      link(rel="stylesheet", href="/assets/css/style.css")
+    block title
+      title Sample Project
+  body
+    a#top
+    block header
+      include _header.pug
+    main.l-main
+      block content
+        p default
+    block footer
+      include _footer.pug

@@ -1,0 +1,36 @@
+//font size
+//sp
+$f_size_sp: 1.4rem;
+
+//pc
+$f_size_pc: 1.6rem;
+
+//font family
+@font-face {
+  font-family: YuGothicM;
+  src: local(Yu Gothic Medium),
+  local(Yu Gothic);
+  font-weight: 500;
+}
+$f_base: 'Noto Sans JP', YuGothicM, YuGothic, "Hiragino Kaku Gothic Pro", "Meiryo", "sans-serif";
+$f_serif: 'Noto Serif JP', "游明朝", YuMincho, "Hiragino Mincho ProN", "Hiragino Mincho Pro", "ＭＳ 明朝", serif;
+$f_en: 'Vidaloka', 'Noto Serif JP', serif;
+// color scheme //
+//brand colors
+$c_bg: #fff;
+$c_primary: #00761C;
+$c_primary_light: #DCEDA3;
+$c_second: #062D91;
+$c_second_light: #4D6CBC;
+$c_accent: #ED5454;
+$c_gray: #D9DEE2;
+$c_gray_light: #EEE;
+$c_text: #333;
+$c_text_gray: #666;
+
+$c_error: #ED5454;
+
+$c_sns_twitter: #1DA1F2;
+$c_sns_facebook: #4267B2;
+
+$c_border: #D9D9D9;

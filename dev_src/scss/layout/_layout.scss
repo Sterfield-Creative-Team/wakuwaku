@@ -1,0 +1,143 @@
+
+.l-mainvisual {
+  position: relative;
+}
+
+.l-products {
+  padding: 90px 0 120px 0;
+  margin: 0 auto;
+  text-align: center;
+
+  &__title {
+    font-size: 3.5rem;
+    color: $c_primary;
+    display: inline;
+    border-style: solid;
+    border-width: 10px 35px;
+    border-image: url('/assets/img/line_long.svg') 30 15 round;
+    border-image-width: 4px 10px;
+  }
+
+  &__list {
+    display: flex;
+    justify-content: center;
+    margin-top: 55px;
+
+    @include media (sp) {
+      display: block;
+    }
+
+    & > :first-child {
+      margin-right: 110px;
+
+      @include media (tab) {
+        margin-right: 50px;
+      }
+
+      @include media (sp) {
+        margin-right: 0;
+        margin-bottom: 50px;
+      }
+    }
+  }
+
+}
+
+.product-img {
+  width: 320px;
+  height: 320px;
+}
+
+.product-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+.product-btn {
+  margin-top: 25px;
+  width: 200px;
+  height: 40px;
+  background-color: $c_primary;
+  color: $c_bg;
+  border-radius: 10px;
+  padding: 0 0 3px 28px;
+
+  &::after {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 13px;
+    background: url('/assets/img/ico_btn.svg') no-repeat;
+    margin-left: 14px;
+  }
+}
+
+.l-about {
+  position: relative;
+
+  &__title {
+    position: absolute;
+    background-color: $c_bg;
+    color: $c_primary;
+    font-size: 2.5rem;
+    padding: 8px 20px 16px;
+    left: 10%;
+    line-height: 1;
+
+    @include media (sp) {
+      font-size: 1.6rem;
+      padding: 4px 10px 8px;
+    }
+  }
+
+  & > video {
+    height: 630px;
+    object-fit: cover;
+
+    @include media (sp) {
+      height: 300px;
+    }
+  }
+}
+
+.swiper-slide {
+  height: auto;
+
+  & > img {
+    width: 100%;
+    height: 630px;
+    object-fit: cover;
+
+    @include media (sp) {
+      height: auto;
+      object-fit: contain;
+    }
+  }
+} 
+
+
+#video-btn {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  content: '';
+  display: inline-block;
+  width: 72px;
+  height: 72px;
+  background: url('/assets/img/video-btn.svg') no-repeat;
+  cursor: pointer;
+}
+
+.l-lp {
+  text-align: center;
+  padding-top: 90px;
+
+  @include media (sp) {
+    padding-top: 60px;
+  }
+}

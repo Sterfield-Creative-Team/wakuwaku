@@ -1,0 +1,23 @@
+@charset "UTF-8";
+
+//==========================================================
+// base
+// 基本CSS
+// - base
+//==========================================================
+
+@import "base/_base";
+@import "../../node_modules/swiper/swiper.scss";
+@import "../../node_modules/swiper/components/pagination/pagination.scss";
+
+
+//==========================================================
+// base
+// 基本CSS
+// - header
+// - layout
+// - footer
+//==========================================================
+@import "layout/_header";
+@import "layout/_layout";
+@import "layout/_footer";

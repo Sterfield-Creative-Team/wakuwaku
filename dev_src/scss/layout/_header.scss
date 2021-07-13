@@ -1,0 +1,144 @@
+.l-header {
+  position: fixed;
+  width: 100%;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 90px;
+  background: $c_bg;
+
+  @include media (sp) {
+    height: 60px;
+    align-items: center;
+  }
+
+  &__logo {
+    padding: 0 0 6px 32px;
+
+    @include media (tab) {
+      padding: 0 0 3px 16px;
+    }
+
+    @include media (sp) {
+      width: 140px;
+      padding: 0;
+    }
+  }
+
+  &__right {
+    display: flex;
+    align-items: flex-end;
+    padding: 0 78px 18px 0;
+
+    @include media (tab) {
+      padding: 0 48px 18px 0;
+    }
+
+    @include media (sp) {
+      padding: 0 10px 0 0;
+    }
+
+  }
+
+  &__list {
+    display: flex;
+    justify-content: space-around;
+    margin-right: 108px;
+
+    @include media (tab) {
+      margin-right: 50px;
+    }
+    @include media (sp) {
+      margin-right: 10px;
+    }
+  }
+
+  &__item {
+    &:nth-of-type(2) {
+      margin: 0 5px 0 20px;
+      padding: 0 15px 0 0;
+
+      @include media (sp) {
+        margin: 0;
+        padding: 0 10px;
+      }
+    }    
+    &::before {
+      content:'・';
+
+      @include media (sp) {
+        content:'';
+      }
+
+    }
+  }
+
+  &__sns {
+    & > :first-child {
+      margin-right: 20px;
+
+      @include media (sp) {
+        margin-right: 10px;
+      }
+    }
+
+    & > span > img {
+      @include media (sp) {
+        width: 30px;
+        height: 30px;
+      }
+    }
+  }
+
+}
+
+
+.product-list {
+  display: none;
+  background-color: #fff;
+  padding: 10px;
+  box-shadow: 0px 2px 7px 0px rgba(0,0,0,0.1); 
+  border-radius: 5%;
+  position: absolute;
+  top: 90px;
+  left: calc(100% - 460px);
+
+  @include media (sp) {
+    top: 60px;
+    left: calc(100% - 220px);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    margin-left: -10px;
+    border: 10px solid transparent;
+    border-bottom: 15px solid #fff;
+  }
+
+  & > li{
+    &::before {
+      content: '> ';
+    }
+    &:hover {
+      color: $c_primary;
+    }
+  }
+  
+}
+
+.product-menu {
+  border-bottom: 2px solid #fff;
+
+  &:hover {
+    border-image: url('/assets/img/line_short.svg') 0 0 10 0 / 4px stretch;
+
+    & > .product-list {
+      display: block;
+    }
+  }
+
+}
