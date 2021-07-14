@@ -1,0 +1,678 @@
+<script type="text/javascript">
+  
+var $product_sku_id = $('#{{ form.product_sku_id.vars.id }}');
+var $quantity = $('#{{ form.quantity.vars.id }}');
+var $payment_id = $('#{{ form.payment.vars.id }}');
+var $delivery_abroad_id = $('#{{ form.delivery_abroad.vars.id }}');
+var $country = $('#{{ form.country.vars.id }}');
+var $sex = $('#{{ form.sex.vars.id }}');
+var $zipcode = $('#{{ form.zipcode.vars.id }}');
+var $tel = $('#{{ form.tel.vars.id }}');
+var $prefecture = $('#{{ form.district.vars.id }}');
+
+var regular_product_ids = {{productArray|json_encode()|raw}};
+var post_product_sku_id = "";
+var post_payment = "";
+var post_delivery_abroad = "";
+
+post_product_sku_id = "{{form.product_sku_id.vars.value}}";
+post_payment = "{{form.payment.vars.value}}";
+post_delivery_abroad = "{{form.delivery_abroad.vars.value}}";
+
+$.ajax({
+  type: "GET",
+	url:"/latest.json",
+   dataType:"json",
+	async: false,
+}).done(function(json){
+  FMY = json.rates.{{unit_back}};
+    JPY = json.rates.JPY;
+    if(lcFormOption.currency_abroad != ""){
+      FMY = lcFormOption.currency_abroad
+    }
+    if(lcFormOption.currency_jp != ""){
+      JPY = lcFormOption.currency_jp
+    }
+    ratio = FMY / JPY;
+}).fail(function(result){
+});
+  
+$(document).ready(function() {
+  
+  
+$(window).load(function(){
+   showcredit();
+   var set_product_sku_id = (post_product_sku_id) ?post_product_sku_id : regular_product_ids[0]['skuId'];
+   {% set productSetCount = 0 %}
+   {% for product in productArray %}
+    {% if product.select is defined and product.select and productSetCount == 0 %}
+      set_product_sku_id = {{ product.skuId }};
+      {% set productSetCount = 1 %}
+    {% endif %}
+   {% endfor %}
+  
+    {% if formOption.productDefaultSelect %}
+    $product_sku_id.find("option[value=" + set_product_sku_id +"]").prop("selected",true).change();
+  {% endif %}
+  if($country.val() == ""){
+    $country.find("option[value=" + {{formOption.country}} +"]").prop("selected",true).change();
+    
+   }else{
+     countryChange($country,true);
+   }
+  
+   if(lcFormOption.country_option_reject){
+     $.each(lcFormOption.country_option_reject, function(index,value) {
+       $country.find("option[value=" + value +"]").remove();
+     });
+   }
+   
+});
+
+ $product_sku_id.change(function () {
+    productSet();
+    if($(this).find(":selected").data("type") == "regular_group") {
+      $("#regular_hidden").html('<input type="hidden" id="ec_client_landing_page_type_regular_interval" name="ec_client_landing_page_type[regular_interval]" value="' + $(this).find(":selected").data("regular_interval") + '">');
+    }
+    else {
+      $("#regular_hidden").html('');
+    }
+    if($(this).find(":selected").data("type") == "regular_group")   {
+     $(".pymRgrTxt").delay(1000).show();
+   }else{
+     $(".pymRgrTxt").delay(1000).hide();
+   }
+  });
+  if($(this).val() == "")   {
+    $payment_id.val("").change();
+   }
+   //
+   //メールチェック
+  $('#{{ form.email.vars.id }}, #mail_check').on('focus blur keypress', function(){
+    if( $("#{{ form.email.vars.id }}").val() == $("#mail_check").val()) {
+      $("#mail_check-error").css("display", "none");
+    } else {
+      $("#mail_check-error").css("display", "");
+    }
+  });
+   
+  $tel.on( "change", function() { 
+    if( $country.val() == '{{formOption.country}}') {
+       if($tel.val() != "") {
+          if( $tel.val().length === 10 ) {
+            $("#tel_check-error").css("display", "none");
+          } else {
+            $("#tel_check-error").css("display", "");
+          }
+         } else {
+          $("#tel_check-error").css("display", "none");
+        }
+      } else {
+      $("#tel_check-error").css("display", "none");
+    }
+  });
+   
+  $quantity.change(function(){
+    refer();
+  });
+  $payment_id.change(function(){
+    showcredit();
+  });
+  $delivery_abroad_id.change(function(){
+        changeDelivery();
+  });
+  {% if form.paytimes is defined %}
+    showpaytimes();
+    $("#{{ form.paymode.vars.id }}").change(function(){
+      showpaytimes();
+    });
+  {% endif %}
+  {% if overseas_shipment_use_flg %}
+        $country.change(function(e) {
+          countryChange(this);
+        });
+  {% else %}
+  
+    $('#{{ form.zipcode1.vars.id }}').zip2addr({
+      zip2:'#{{ form.zipcode2.vars.id }}',
+      pref:'#{{ form.district.vars.id }}',
+      addr:'#{{ form.locality.vars.id }}'
+    });
+  {% endif %}
+  {% if is_authorized() %}
+  {% endif %}
+
+  $(".product_total").text(prices[Object.keys(prices)[0]]*$('select[name="quantity"]').val());
+  $quantity.change(function() {
+    $(".product_total").text(prices[Object.keys(prices)[0]]*$('select[name="quantity"]').val());
+  });
+  
+if(lcFormOption.hyphen_reject){
+  if($tel.val() == "--"){
+    $tel.val('');
+  }
+  if($zipcode.val() == "-"){
+    $zipcode.val('');
+  }
+  if($sex.val() == "-"){
+    $sex.val('');
+  }
+}
+  //都道府県非表示
+if(lcFormOption.district_tr_reject){
+  $('#district_tr').hide();
+}
+
+
+
+ {#  $("#{{ form.quantity.vars.id }}").val("{{ app.request.get('tmp_quantity') }}");
+
+  $("#{{ form.quantity.vars.id }}").change(function() {
+    $("#tmp_quantity").val($("#{{ form.quantity.vars.id }}").val());
+  });#}
+  
+  if ("{{ app.request.get('tmp_quantity') }}") {
+    $("#{{ form.quantity.vars.id }}").val("{{ app.request.get('tmp_quantity') }}");
+  } else {
+    $("#{{ form.quantity.vars.id }}").val("1");
+    $("#tmp_quantity").val("1");
+  }
+  
+  $("#city").val("{{ app.request.get('city') }}");
+
+  if ("{{ app.request.get('city') }}") {
+    cityChange();
+  }
+
+  $('#city').change(function() {
+    $("#ec_client_landing_page_type_locality").val("");
+    cityChange();
+  });
+
+  $('#street').change(function() {
+    $("#ec_client_landing_page_type_locality").val($('#city').val() + $('#street option:selected').text());
+    $("#ec_client_landing_page_type_zipcode").val($('#street').val()).change();
+
+    if ($('#street').val() ==  "") {
+      $("#ec_client_landing_page_type_locality").val("");
+    }
+  });
+  
+});
+function countryChange(e,init) {
+    var req = "{{ app.request.get('city') }}";
+    if(!init){
+    $("#ec_client_landing_page_type_locality,#ec_client_landing_page_type_zipcode,#city").val("");
+    }
+  
+  var $elm = $(e).val();
+  if(countryFormReject[$elm]["payment"]){
+    $payment_id.find("option").prop("disabled",false).css("display","block");
+    $.each(countryFormReject[$elm]["payment"],function(index,value){
+      $payment_id.find("option[value=" + value +"]").prop("disabled",true).css("display","none");
+      if($payment_id.find("option:selected").val() == value ){
+        $payment_id.find("option").prop("selected",false).change();
+        }
+    });
+  }else{
+    $payment_id.find("option").prop("disabled",false).css("display","block");
+  }
+  
+    if(countryFormReject[$elm]){
+      
+      $.each(countryFormReject[$elm], function(index, value) {
+        
+       if(value){
+         if(!init ){
+                    $("#" + index).css("display", "").find("input,select").val("").change();
+         }
+        }else{
+          $("#" + index).css("display", "none").find("input").val("999999");
+        }
+      });
+    }
+  if ( $elm == "1" ) {
+    $('#{{ form.zipcode1.vars.id }}').zip2addr({
+      zip2:'#{{ form.zipcode2.vars.id }}',
+      pref:'#{{ form.district.vars.id }}',
+      addr:'#{{ form.locality.vars.id }}'
+    });
+    $('#delivery_name').show();
+    $delivery_abroad_id.val('');
+    $delivery_abroad_id.hide();
+    $('#delivery_day_tr').show();
+    $('#delivery_time_tr').show();
+  } else {
+    $delivery_abroad_id.show();
+    $('#delivery_name').hide();
+    $('#delivery_day_tr').hide();
+    $('#{{ form.delivery_day.vars.id }}').val('');
+    $('#delivery_time_tr').hide();
+    $('#{{ form.delivery_time.vars.id }}').val('');
+  }
+}
+
+function cityChange() {
+  $("#street option").remove();
+  var option = $("<option>").val("").text("區域");
+  $("#street").append(option);
+    $("#street").prop("disabled",true);
+  $.ajax({
+    type: 'GET',
+    url: '/resources/js/zipcode.json',
+    dataType: 'json',
+    success: function(json)
+    {
+      if($("#city").val() != ""){
+        for( var i = 0; i < json[$("#city").val()].length; i++ ) {
+          var option = $("<option>").val(json[$("#city").val()][i][1]).text(json[$("#city").val()][i][0]);
+          $("#street").append(option);
+        }
+      }
+      $("#street").prop("disabled",false);
+
+      if ("{{ app.request.get('street') }}") {
+        $("#street").val("{{ app.request.get('street') }}");
+        
+      }
+    }
+  });
+}
+
+function set_FMY(p) {
+  return Math.round( p / JPY * FMY ).toLocaleString();
+}
+function productChange(p) {
+   var dd = $("#ec_client_landing_page_type").offset().top;
+  // $('html,body').animate({ scrollTop: dd },0);
+  if (p) {
+    $('html,body').animate({ scrollTop: dd }).promise().done(function (){
+      $product_sku_id.val(p).change();
+      $("#skuid").val($product_sku_id.val());
+    }); 
+  }
+}
+   
+// add Start
+ function valueSet(v) {
+   $product_sku_id.val(v);
+   $product_sku_id.trigger('change');
+ }
+ // add End 
+   
+ function productSet() {
+  var skuId_val = $product_sku_id.val();
+  if($quantity.val() == 0){
+    $quantity.val(1).change();
+  }else{
+    refer();
+  }
+  $quantity.attr("name", "ec_client_landing_page_type[quantity][" + skuId_val + "]");
+  getInfo(skuId_val,  $("#pay_id").val(), 'pay', "{{ 'selection.landing_page.payment.empty_value'|trans({}, 'clients') }}","{{ form.payment.vars.id }}",post_payment, "{{ product.getPayPalPayment(system_config('base_currency')) }}");
+  getInfo(skuId_val,  $("#del_id").val(), 'del', "{{ 'selection.landing_page.delivery_abroad.empty_value'|trans({}, 'clients') }}","{{ form.delivery_abroad.vars.id }}", post_delivery_abroad);
+   
+}
+function refer() {
+  var additions = {}
+  $('select[name^=additions]').map(function () {
+    additions[this.name.match(/\[(\d+)\]/)[1]] = this.value;
+  });
+  for ( var i = 1; i < $( "#priceTable tr" ).length; i++ ) {
+    var p = Number( $( "#priceTable tr" ).eq( i ).find(".skuPrice2").html().trim().replace(",", "") );
+    var q = Number( $( "#priceTable tr" ).eq( i ).find("select").val() );
+
+    $( "#priceTable tr" ).eq( i ).find(".payment_total").text(Number(p * q).toLocaleString());
+    $( "#priceTable tr" ).eq( i ).find(".payment_total_jp").text(Number(p * q * ratio).toLocaleString());
+  }
+
+  $.ajax({
+    type: "POST",
+    async: false,
+    url: "{{ path('ec_client_landing_page_current_payment_total') }}",
+    
+    
+    data: {
+      "product_id": {{ product.id }},
+      "product_sku_id": $product_sku_id.val(),
+      "quantity": $quantity.val(),
+      "prefecture": $prefecture.val(),
+      "country_id": $country.val(),
+      "payment_id": $payment_id.val(),
+      "delivery_abroad_id": $delivery_abroad_id.val(),
+      "additions": additions,
+    },
+  }).done(function(res){
+    
+    if (res.errors.length == 0) {
+      var unitCur = "{% if formOption.currency_unit_ow %}{{formOption.currency_unit_ow}}{% else %}{{unit_back}}{% endif %}";
+      $(".skuPrice2").text(set_FMY(Number($("#ec_client_landing_page_type_product_sku_id option:selected").attr("data-price"))) + unitCur);
+      $(".payment_total_jp").text(Number(res.payment_total).toLocaleString());
+      $(".payment_total").text(Math.round(Number(res.payment_total) * ratio).toLocaleString());
+      $quantity.prop('disabled', false);
+    } else {
+      console.log(res.errors);
+
+      $("#ec_client_landing_page_type_product_sku_id").val("");
+      $quantity.val(0);
+      $(".payment_total").text(0);
+      $(".payment_total_jp").text(0);
+      $(".skuPrice2").text("-");
+      $quantity.prop('disabled', true);
+
+    };
+  }).fail(function(result){
+      console.log(result);
+  });
+}
+
+function showcredit() {
+  var paymentFix = $("#ec_client_landing_page_type_product_sku_id").find(":selected").data("payment");
+  if(paymentFix)    {
+    $payment_id.val(paymentFix);
+    $payment_id.prop("disabled", true);
+  }else{
+    $payment_id.prop("disabled", false);
+  }
+  
+  if ($payment_id.val() == credit_card_id || $payment_id.val() == express_pay_id) {
+    $(".card").show();
+    $(".after_pay").hide();
+    $(".paypelArea").hide();
+  } else if ($payment_id.val() == paypal_pay_id) {
+    $(".card").hide();
+    $(".paypelArea").show();
+    $(".after_pay").hide();
+  } else if ($payment_id.val() == after_pay_id) {
+    $(".card").hide();
+    $(".after_pay").show();
+    $(".paypelArea").hide();
+  } else {
+    $(".card").hide();
+    $(".after_pay").hide();
+    $(".paypelArea").hide();
+  }
+  $("#pay_id").val($payment_id.val());
+}
+function changeDelivery() {
+  $("#del_id").val($delivery_abroad_id.val());
+  if(lcFormOption.deliveryTime){
+  getDeliveryDayTime('day', $("#day_value").val(), 7, "ec_client_landing_page_type_delivery_day", "Delivery Day");
+  getDeliveryDayTime('time', $("#time_value").val(), 2, "ec_client_landing_page_type_delivery_time", "Delivery time");
+    }
+}
+{% if form.paytimes is defined %}
+  function showpaytimes() {
+    var str = $('#{{ form.paymode.vars.id }}').val();
+    if (str.includes("分割")) {
+      $('#paytimes_tr').show();
+    } else {
+      $('#{{ form.paytimes.vars.id }}').val("");
+      $('#paytimes_tr').hide();
+    }
+  }
+{% endif %}
+
+function Send() {
+  $payment_id.prop("disabled", false);
+  if($("#mail_check")[0]){
+    if( $("#{{ form.email.vars.id }}").val() != $("#mail_check").val()) {
+     return false;
+    }
+  }
+
+  $('input[name="ec_client_landing_page_type[option1]"]').val(ratio);
+  $('input[name="ec_client_landing_page_type[option2]"]').val(Math.round(Number($("#ec_client_landing_page_type_product_sku_id option:selected").attr("data-price")) * ratio));
+  $('input[name="ec_client_landing_page_type[option3]"]').val($("#{{ form.quantity.vars.id }}").val());
+  $('input[name="ec_client_landing_page_type[option4]"]').val($(".payment_total").html().trim().replace(",", ""));
+
+  var  additions = {}
+  $('select[name^=additions]').map(function () {
+    additions[this.name.match(/\[(\d+)\]/)[1]] = this.value;
+  });
+
+  $.ajax({
+    type: "POST",
+    async: false,
+    url: "{{ path('ec_client_landing_page_current_payment_total') }}",
+    data: {
+      "product_id": {{ product.id }},
+      "product_sku_id": $product_sku_id.val(),
+      "quantity": $quantity.val(),
+      "prefecture": $prefecture.val(),
+      "country_id": $country.val(),
+      "payment_id": $payment_id.val(),
+      "delivery_abroad_id": $delivery_abroad_id.val(),
+      "additions": additions,
+    },
+  }).done(function(res){
+    if (res.errors.length == 0) {
+      if ($payment_id.val() == credit_card_id) {
+        doPurchase();
+      } else {
+        preLoad();
+        $("#{{ form.vars.id }}").submit();
+      }
+    } else {
+      $("#product").val("");
+      $quantity.val(0);
+      $(".payment_total").text(0);
+      $(".payment_total_jp").text(0);
+      $("#skuid").val("");
+      $(".skuPrice2").text("-");
+      $quantity.prop('disabled', true);
+      console.log("fail");
+
+    };
+  }).fail(function(result){
+    console.log(result);
+  });
+  return false;
+}
+
+var htmlLang = $('html').attr('lang');
+function FormValidation(key,lang){
+  
+    if(validationInit[key][lang]){
+      
+        this.validate = validationInit[key][lang];
+    }else{
+        this.validate = validationInit[key];
+    }
+    this.$target = $("#" + key);
+}
+FormValidation.prototype = {
+    confirmRequire: function() {
+        if(this.$target.get(0).tagName === 'CHECKBOX') {
+            return this.$target.prop('checked')
+        } else {
+            return this.$target.val() ? true : false
+        }
+    },
+    confirmMax: function() {
+        if(this.validate['max']) {
+            return this.$target.val().length <= this.validate['max'];
+        } else if(validate['num_max']) {
+            return this.$target.val().length <= this.validate['num_max'];
+        }
+    },
+    confirmEq: function() {
+        return this.$target.val().length == this.validate['eq'];
+    },
+    confirmMin: function() {
+        if(this.validate['min']) {
+            return this.$target.val().length >= this.validate['min'];
+        } else if('num_min' in this.data.validate) {
+            return this.$target.val().length >= this.validate['num_min'];
+        }
+    },
+    confirmNumber: function() {
+        return this.$target.val().match(/^[0-9]+$/);
+    },
+    confirmAlpha: function() {
+        return this.$target.val().match(/^[a-z]+$/);
+    },
+    confirmEmail: function() {
+        return (this.$target.val().match(/[!#-9A-~]+@+[a-z0-9]+.+[^.]$/i) && this.$target.val().length < 255);
+    },
+    confirmNoHTML: function() {
+        return !this.$target.val().match(/<(".*?"|'.*?'|[^'"])*?>/);
+    },
+    errorMsgSet: function(item,text){
+        var error = "";
+        var template = "";
+        if(validationErrorWording[item][htmlLang]){
+            template = validationErrorWording[item][htmlLang];
+        }else{
+            template = validationErrorWording[item]["def"];
+        }
+        if(text){
+            template = template.replace(new RegExp("\\{" + item + "\\}", "g"), text);
+            
+        }
+        error += template;
+        
+        return error;
+    },
+    errorMsgDisplay: function(msg){
+        var pos = this.$target.offset();
+        this.$target.before("<span class='error' style='position:absolute;background-color:rgba(255,255,255,0.6);color:red;font-size:14px;padding:0 8px;white-space: nowrap;line-height: 28px;height: 28px;border: 1px solid #f30;left: 0;bottom: 100%;'>"+ msg +"</span>");
+        
+    },
+    confirm: function(){
+        var is_valid = true;
+        if(this.validate["noHtml"]) {
+            if (!this.confirmNoHTML()) {
+                this.errorMsg = this.errorMsgSet("noHtml");
+                is_valid = false;
+            }
+        }
+        if(this.validate["email"] ){
+            if (!this.confirmEmail()) {
+                this.errorMsg = this.errorMsgSet("email");
+                is_valid = false
+            }
+        }
+        if(this.validate["alpha"] ){
+            if(!this.confirmAlpha()){
+                this.errorMsg = this.errorMsgSet("alpha");
+                is_valid = false;
+            }
+        }
+        if(this.validate["min"] ){
+            if(!this.confirmMin()){
+                this.errorMsg = this.errorMsgSet("min",this.validate["min"]);
+                is_valid = false;
+            }
+        }
+        if(this.validate["max"] ){
+            if(!this.confirmMax()){
+                this.errorMsg = this.errorMsgSet("max",this.validate["max"]);
+                is_valid = false;
+            }
+        }
+        if(this.validate["eq"] ){
+            if(!this.confirmEq()){
+                this.errorMsg = this.errorMsgSet("eq",this.validate["eq"]);
+                is_valid = false;
+            }
+        }
+        if(this.validate["number"] ){
+            if(!this.confirmNumber()){
+                this.errorMsg = this.errorMsgSet("number");
+                is_valid = false;
+            }
+        }
+        if(this.validate["required"] == true){
+            if(!this.confirmRequire()){
+                if(this.$target.get(0).tagName === 'INPUT') {
+                    this.errorMsg = this.errorMsgSet("required");
+                } else if (this.$target.get(0).tagName === 'SELECT') {
+                    this.errorMsg = this.errorMsgSet("required_select");
+                }
+                is_valid = false;
+            }   
+        }
+        return is_valid;
+    }
+}
+
+$.each(validationInit,function(key,index){
+    $("#" + key).on("blur",function(){
+        var validateFormInst = new FormValidation(key,{{formOption.country}});
+        $(this).prev(".error").remove();
+        if(!validateFormInst.confirm()){
+            validateFormInst.errorMsgDisplay(validateFormInst.errorMsg);
+        }
+    });
+    $("#" + key).on("change",function(){
+        var validateFormInst = new FormValidation(key,{{formOption.country}});
+        if(validateFormInst.confirm()){
+        $(this).prev(".error").remove();
+      }
+    });
+});
+$country.on("change",function(e){
+    var lang = $(this).val();
+    $.each(validationInit,function(key,index){
+        $("#" + key).off("blur");
+        $("#" + key).prev(".error").remove();
+        $("#" + key).on("blur",function(){
+            var validateFormInst = new FormValidation(key,lang);
+            $(this).prev(".error").remove();
+            if(!validateFormInst.confirm()){
+                validateFormInst.errorMsgDisplay(validateFormInst.errorMsg);
+            }
+        });
+    });
+});
+$("#btnSend").on("click",function(e){
+    e.preventDefault();
+    var is_valid = true;
+    var lang = $country.val();
+    $.each(validationInit,function(key,index){
+      $("#" + key).prev(".error").remove();
+        var validateFormInit = new FormValidation(key,lang)
+        if(!validateFormInit.confirm()) {
+         
+            validateFormInit.errorMsgDisplay(validateFormInit.errorMsg);
+            is_valid = false;
+        }
+    });
+    if(is_valid) {
+        Send();
+    }else{
+       var dd = $("#ec_client_landing_page_type").offset().top;
+      $('html,body').animate({ scrollTop: dd });
+    }
+});
+</script>
+<script type="text/javascript" src="{{ asset("resources/js/jquery.blockUI.js") }}"></script>
+<script type="text/javascript"><!--
+function showBlockUIConfirm(msg) {
+  $.blockUI({ message: '<div class="blockUIcontent"><p>' +msg +
+    '</p><input type="button" id="btnBlockUIOK" value="OK" OnClick="btnBlockUIOK_click_conf()" /> ' +
+    '<input type="button" id="btnBlockUICancel" value="Cancel" OnClick="btnBlockUICancel_click()" /></div>'
+  });
+}
+function btnBlockUIOK_click_conf() {
+  $.unblockUI();
+  document.getElementById("hdnSendChk").value = "submit";
+  document.getElementById("landing").submit();
+  $.blockUI({
+    message: "數據發送！ <br/>了一會兒，請...",
+    css: {
+      border: 'none',
+      padding: '30px',
+      backgroundColor: '#FFFFFF',
+      '-webkit-border-radius': '10px',
+      '-moz-border-radius': '10px',
+      color: '#666666'
+    }
+  });
+}
+function btnBlockUICancel_click() {
+  document.getElementById('btnSend').style.visibility = "visible";
+  $.unblockUI();
+  return false;
+}
+//--></script>

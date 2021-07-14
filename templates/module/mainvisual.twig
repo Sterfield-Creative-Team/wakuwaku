@@ -1,24 +1,9 @@
-<li class="mainvisual__item">
-  <a href="">
-    <figure class="mainvisual__figure"><img src="{{ asset('assets/img/hero_top_01.jpg') }}" alt="***"/></figure>
-    <div class="mainvisual__text">
-      <p class="mainvisual__catch">
-        <em>{{ #catch_text# }}</em><br>
-        LC E-SHOP
-      </p>
-      <p class="mainvisual__copy">{{ #copy_text# | raw }}</p>
-    </div>
-  </a>
-</li>
-<li class="mainvisual__item">
-  <a href="">
-    <figure class="mainvisual__figure"><img src="{{ asset('assets/img/hero_top_02.jpg') }}" alt="***"/></figure>
-    <div class="mainvisual__text">
-      <p class="mainvisual__catch">
-        <em>{{ #catch_text# }}</em><br>
-        LC E-SHOP
-      </p>
-      <p class="mainvisual__copy">{{ #copy_text# | raw }}</p>
-    </div>
-  </a>
-</li>
+<section class="l-mainvisual">
+   <div class="swiper-container mySwiper">
+     <ul class="swiper-wrapper">
+       <li class="swiper-slide"><img src="{{ asset("assets/img/pic_main01.png") }}"  alt=""/></li>
+       <li class="swiper-slide"><img src="{{ asset("assets/img/pic_main02.png") }}"  alt=""/></li>
+     </ul>
+     <div class="swiper-pagination"></div>
+   </div>
+</section>

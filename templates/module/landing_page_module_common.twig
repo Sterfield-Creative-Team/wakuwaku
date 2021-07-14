@@ -1,0 +1,659 @@
+{% set ratio = cur_unit_ratio() %}
+{% set productskus = product.productSku %}
+{% set supported_currencies = system_config("currency") %}
+{% set currency_exchange_use_flg = system_config("currency_exchange_use_flg") %}
+{% set is_multilingual = system_config("is_multilingual") %}
+{% set languages = languages() %}
+{% set slug_name = current_slug %} 
+{% set decimalPoint = system_config('decimal_place') %} 
+
+{% set unit_front = unit_front() %}
+{% if unit_back()  == "" %}
+  {% set unit_back = "円" %}
+{% else %}
+  {% set unit_back = unit_back() %}
+{% endif %}
+{% set em = get_entity_manager() %}
+
+{% set has_paypal = false %}
+{% for productItem in productArray %}
+  {% set productSelect2 = get_entity_manager().getRepository('EcCoreBundle:ProductSku').find(productItem.skuId) %}
+  {% set productSelect = productSelect2.product %}
+{% for payment in productSelect.getPayments %}
+  {% if payment.getName == 'paypal' %}
+    {% set has_paypal = true %}
+  {% endif %}
+{% endfor %}
+{% endfor %}
+
+{% if form_lp is not defined%}
+  {% set form = landing_page_api.getLandingPageFormView(product.id, app.request) %}
+{% else %}
+  {% set form = form_lp %}
+{% endif %}
+{% set overseas_shipment_use_flg = system_config("overseas_shipment_use_flg") %}
+
+{% if has_paypal %}
+<script src="https://www.paypalobjects.com/api/checkout.js"></script>
+<script>
+var CREATE_PAYMENT_URL = "{{ path('application_frontend_paypal_checkout_prepare') }}";
+paypal.Button.render({
+  env: {% if is_payment_dev() %}'sandbox'{% else %}'production'{% endif %},
+  commit: 'true',
+  payment: function() {
+    var kk = 'quantities['+$("#{{ form.product_sku_id.vars.id }}").val()+']';
+   var da = $('#{{ form.delivery_abroad.vars.id }}').find("option:eq(1)").val() || $('#{{ form.delivery_abroad.vars.id }}').val();
+    var obj ={
+        delivery_day: '',
+        'additions[]': '',
+        delivery_abroad_id: da,
+        back_url : "ec_client_landing_page_settlement",
+        "back_url_options[product_id]" : {{ product.id }},
+        "back_url_options[slug]" : '{{ slug_name }}',
+        discount: '0',
+   };
+    obj[kk] = $("#{{ form.quantity.vars.id }}").val();
+    var options = $("input[name^='ec_client_landing_page_type[option']");
+    options.each(function(index, e){
+      obj["options["+$(e).attr('name').replace("ec_client_landing_page_type[", "").slice(0, -1)+"]"] = $(e).val();
+    });
+
+    if ($("#{{ form.regular_interval.vars.id }}").val() != undefined) {
+      obj["regular_interval"] = $("#{{ form.regular_interval.vars.id }}").val();
+    }
+    
+    return paypal.request({
+      method: 'POST',
+      url: CREATE_PAYMENT_URL,
+      data: obj,
+    }).then(function(data) {
+      return data.PayerID;
+    });
+  },
+  onAuthorize: function(data, actions) {
+    var EXECUTE_URL = '{{ path("application_frontend_paypal_result_checkout") }}';
+
+    return paypal.request.post(EXECUTE_URL, { PayerID: data.payerID, token: data.orderID, orderStr: data.orderID })
+      .then(function (res) {
+        if(res.success == true) {
+          window.location.replace("{{ path('ec_client_cart_complete') }}");
+        } else if(res.error == 10486) {
+          actions.restart();
+        } else {
+          window.alert(res.error);
+        }
+      });
+
+    return actions.redirect();
+  },
+  onCancel: function(data, actions) { return actions.redirect();
+  }
+}, '#paymentMethods'); </script>
+{% endif %}
+
+<script>
+  function preLoad() {
+    $('body').append("<div class='bgModal'></div>");
+    $('#btnSend').prop('disabled',true).text("Processing");
+  }
+</script>
+{% TemplateInclude "card_token_module" %}
+{% TemplateInclude "ajaxModule" %}
+
+<script type="text/javascript" src="{{ asset("/resources/js/jquery.min.js")}}"></script>
+<script type="text/javascript" src="{{ asset("/resources/js/jquery-ui.min.js")}}"></script>
+<script type="text/javascript" src="{{ asset("/resources/js/jquery.ui.datepicker-zh-cn.js") }}"></script>
+<link href="{{ asset("resources/css/content.css") }}" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" type="text/css" href="{{ asset("/resources/css/jquery-ui.css")}}" media="all" />
+<script type="text/javascript" src="{{ asset("/resources/js/jquery.zip2addr.js")}}"></script>
+
+<script type="text/javascript">
+<!--
+//日付選択
+$(function(){
+  $('.datepicker').datepicker({
+    changeMonth: true, 
+    changeYear: true,
+    showOn: "both",
+    yearRange: '1901:2022',
+    buttonImage: "{{ asset("../images/calender.png")}}"
+  });
+  var dt = new Date();
+  $(".datepicker").datepicker("setDate", (dt.getFullYear() - 30) + "-" +  (dt.getMonth() + 1) + "-" + dt.getDate());
+});
+// -->
+</script>
+
+<div id="contents">
+  <div id="main">
+
+    <form id="{{ form.vars.id }}" name="cartin" action="{{ path("ec_client_landing_page_settlement", {"slug": slug_name, "product_id":product.id})}}#{{ form.vars.id }}" method="post">
+      {{ form_errors(form) }}
+      {{ form_widget(form._token) }}
+      {{ form_widget(form.token) }}
+      {{ form_widget(form.tokennumber) }}
+
+      {% set totalStock = 0 %}
+      {% for productsku in productskus %}
+        {% if productsku.stockUnlimited %}
+          {% set totalStock = totalStock + 1 %}
+        {% else %}
+          {% set totalStock = totalStock + productsku.stock %}
+        {% endif %}
+      {% endfor %}
+      <article class="cmnProFrom">
+        <div class="itemWrap cf">
+          {{ form_widget(form.product_id) }}
+          <input type="hidden" name="product_sku_id" value="{{ product.productSku[0].id }}" >
+          <section class="pageContent">
+            <div class="pageBody">
+              {% if (errors is defined) and (errors|length > 0) %}
+                {% for error in errors %}
+                  <p class="red">{{ error|trans({}, 'clients') }}</p>
+                {% endfor %}
+              {% endif %}
+
+
+              <section class="payForm">
+                <h3>訂單開始</h3>
+
+                <table id="priceTable" class="noBlock">
+                  <tbody>
+                    <tr>
+                      <th>商品(請選擇)</th>
+                      <th>價格</th>
+                      <th>數量</th>
+                      <th>總計</th>
+                    </tr>
+                    <tr>
+                      <td>
+                        
+                        <select id="ec_client_landing_page_type_product_sku_id" name="ec_client_landing_page_type[product_sku_id]" class="order-select">
+                          {% if not formOption.productDefaultSelect %}<option value="" data-price="">請選擇</option>{% endif %}
+{% for number, product in productArray %}
+  {% set productSelect = get_entity_manager().getRepository('EcCoreBundle:ProductSku').find(product.skuId) %}
+  {% set productSelect2 = get_entity_manager().getRepository('EcCoreBundle:Product').find(productSelect.product.id) %}
+  <option value="{{product.skuId}}" data-price="{{productSelect.price|number_format(decimalPoint,'.','') }}"  data-type="{{productSelect2.productType}}"{% if product.regular_interval is defined %} data-regular_interval="{{product.regular_interval}}"{% endif %}{% if product.payment_fix is defined %} data-payment="{{product.payment_fix}}"{% endif %} data-unit_front="" data-unit_back="" >{{productSelect}}</option>
+  {% endfor %}
+
+                        </select>
+
+                        <div id="regular_hidden"></div>         
+                      </td>
+                      <td>
+                        <strong>
+                          <span class="skuPrice2">{{ (productskus[0].getPrice*raito)|number_format }}</span>
+                        </strong>
+                      </td>
+                      <td>
+                        <select id="{{ form.quantity.vars.id }}" name="" class="refer order-quantity">
+                          {% if formOption.quantity0disp %}<option value="0">0</option>{% endif %}
+                          <option value="1">1</option>
+                        </select>
+                        <input type="hidden" id="tmp_quantity"  name="tmp_quantity" value="{% if (app.request.get('tmp_quantity')) %}{{ app.request.get('tmp_quantity') }}{% else %}1{% endif %}">
+                        {{ form_errors(form.quantity) }}
+                      </td>
+                      <td class="order-price">
+                        <span class="payment_total">{{ (productskus[0].getPrice*raito)|number_format }}</span>
+                        {% if formOption.currency_unit_ow %}
+                        	{{formOption.currency_unit_ow}}
+                        {% else %}
+                        	{{unit_back}}
+                        {% endif %}
+                        (<span class="payment_total_jp">{{ (productskus[0].getPrice)|number_format }}</span>JPY)
+                      </td>
+
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="pymRgrTxt">
+                  <p>※請務必閱讀以下說明。<span class="important">完成訂購即視同理解並同意本購買方式。</span></p>
+                  <p><span>&lt;定期4袋方案說明&gt;</span></p>
+                   <p> (1)完成本方案的首期訂購後，<span>每隔約40天</span>，您還會收到下一期的好速纖4袋。<span class="important">系統會定期為您自動購買並出貨，直到您取消本方案為止。</span><br>也就是「即使您沒有再次下單購買，也會持續收到產品」的訂購方式。<br>例如:<br>5/1第一次您主動訂購付款。5/8收到好速纖4袋<br>6/15左右第二次訂單自動產生，自動扣款。6/22收到好速纖4袋<br>7/1左右第三次訂單自動產生，自動扣款。7/8收到好速纖4袋<br>(以上只供舉例參考，實際日期等狀況因人而異)<br></p>
+                  <p>(2)<span class="important">本方案並沒有強制綁約，若您不希望繼續購買，<br>只需要在<span>下一期寄出的「10天前」</span>，撥打客服專線(<span class="impTel">0800-012-775</span>)取消即可。</span></p>
+                  <p>(3)定期方式在日本相當普遍，只要下單填寫一次資料，商品就會每隔一段時間自動送到家，不只非常方便、省時，還能透過持續不中斷的使用，發揮產品最大效果。</p>
+                  <p>※若您對定期方案還有疑問，歡迎撥打客服專線(<span class="impTel">0800-012-775</span>)，<br>好速纖全體員工都很樂意為您詳細說明，謝謝。</p>
+                </div>
+                <div class="pymNmlTxt"></div>
+
+              </section>
+              <section class="payForm">
+                <h3>客戶信息</h3>
+                <table class="spForm01">
+                  <tbody>
+                    <tr class="sex">
+                      <th>姓名<span class="required">需要</span></th>
+                      <td class="required">
+                        <div class="col2">
+                          <span class="formParts required">{{ form_widget(form.last_name, { 'attr': {'placeholder': "姓",'class':"checkZen"} }) }}</span>
+                          <span class="formParts required">{{ form_widget(form.first_name, { 'attr': {'placeholder': "名",'class':"checkZen"} }) }}</span>
+                        </div>
+                        {{ form_errors(form.last_name) }}
+                        {{ form_errors(form.first_name) }}
+                      </td>
+                    </tr>
+                    <tr class="div">
+                      <th>性別</th>
+                      <td>
+                        <div class="col2">
+                          <span class="formParts required">{{ form_widget(form.sex, { 'attr': {'placeholder': "姓",'class':"checkZen"} }) }}</span>
+                        </div>
+                        {{ form_errors(form.sex) }}
+                      </td>
+                    </tr>
+                    <tr class="section">
+                      <th>生日</th>
+                      <td>
+                        <div class="calender">
+                          <span class="formParts required widLong">{{ form_widget(form.birthday, { 'attr': {'placeholder': "年-月-日"} }) }}</span>
+                        </div>
+                        {{ form_errors(form.birthday) }}
+                      </td>
+                    </tr>
+
+                    {% if overseas_shipment_use_flg %}
+                      <input type="hidden" name="ec_client_landing_page_type[country]" value="11" id="ec_client_landing_page_type_country">
+                    {% else %}
+                      <input id="#{{ form.country.vars.id }}" name="#{{ form.country.vars.full_name }}" type="hidden" value="1" />
+                    {% endif %}
+
+                    <input type="hidden" id="ec_client_landing_page_type_district" name="ec_client_landing_page_type[district]" value="lp_district">
+                    <tr>
+                      <th>省市縣鄉鎮村<span class="required">需要</span></th>
+                      <td class="required">
+                        <span class="formParts required widLong">
+                          <select id="city" name="city">
+                            <option value="">縣市</option>
+                            <option value="臺北市">臺北市</option>
+                            <option value="基隆市">基隆市</option>
+                            <option value="新北市">新北市</option>
+                            <option value="宜蘭縣">宜蘭縣</option>
+                            <option value="釣魚臺">釣魚臺</option>
+                            <option value="新竹市">新竹市</option>
+                            <option value="新竹縣">新竹縣</option>
+                            <option value="桃園市">桃園市</option>
+                            <option value="苗栗縣">苗栗縣</option>
+                            <option value="臺中市">臺中市</option>
+                            <option value="彰化縣">彰化縣</option>
+                            <option value="南投縣">南投縣</option>
+                            <option value="嘉義市">嘉義市</option>
+                            <option value="嘉義縣">嘉義縣</option>
+                            <option value="雲林縣">雲林縣</option>
+                            <option value="臺南市">臺南市</option>
+                            <option value="高雄市">高雄市</option>
+                            <option value="南海諸島">南海諸島</option>
+                            <option value="澎湖縣">澎湖縣</option>
+                            <option value="屏東縣">屏東縣</option>
+                            <option value="臺東縣">臺東縣</option>
+                            <option value="花蓮縣">花蓮縣</option>
+                            <option value="金門縣">金門縣</option>
+                            <option value="連江縣">連江縣</option>
+                          </select>
+
+                          <select id="street" name="street">
+                            <option value="">區域</option>
+                          </select>
+
+                          <input type="hidden" id="ec_client_landing_page_type_locality" name="ec_client_landing_page_type[locality]" required="required" value="{{ form.locality.vars.value }}">
+                        </span>
+                        {{ form_errors(form.locality) }}
+                      </td>
+                    </tr>
+
+                    <tr id="zipcode_tr">
+                      <th>郵遞區號<span class="required">需要</span></th>
+                      <td class="required">
+                        <span class="formParts required widLong">
+                          {{ form_widget(form.zipcode, { 'attr': {'placeholder': "104",'class':"yubin"} }) }}<br>
+                        </span>
+
+                        {{ form_errors(form.zipcode) }}
+                      </td>
+                    </tr>
+                    <tr class="section">
+                      <th>地址<span class="required">需要</span></th>
+                      <td class="required">
+                        <span class="formParts required widLong">{{ form_widget(form.street, { 'attr': {'placeholder': "地址"} }) }}</span>
+                        {{ form_errors(form.street) }}
+                      </td>
+                    </tr>
+                    <tr class="section">
+                      <th>手機號碼<span class="required">需要</span></th>
+                      <td>
+                        <span class="formParts required widLong">
+                          {{ form_widget(form.tel, { 'attr': {'placeholder': "數字10碼，不需要【–】橫槓記號。"} }) }}
+                        </span>
+
+                        {{ form_errors(form.tel) }}
+                      </td>
+                    </tr>
+                    <tr class="section">
+                      <th>Email<span class="required">需要</span></th>
+                      <td class="required">
+                        {% if is_authorized() %}
+                          {{ form.email.vars.value }}
+                        {% endif %}
+                        <span class="formParts required widLong">{{ form_widget(form.email, { 'attr': {'placeholder': "xxxx@xxxx",'class':"checkMail",'onpaste':"return false;" , 'onCopy':"return false"} }) }}</span><br>
+                        <!-- メールアドレス二重チェック -->
+                        
+                          <span class="formParts required">
+                          <input type="text" class="mail"  name="mail_check" id="mail_check" placeholder="請再次輸入：xxxx@xxxx" onpaste="return false;"  onCopy="return false" required value="{{ app.request.get('mail_check') }}" />
+                          <label id="mail_check-error" style="display: none;" class="error" for="mail_check"> ⓧ 輸入的郵件地址不一致</label>
+                          </span>
+                        
+                        {{ form_errors(form.email) }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+               
+              </section>
+
+              <style>
+.pageContent .payForm .mail.error {
+  font-weight: normal;
+}
+    .pageContent .payForm #mail_check-error.error{
+      font-size:20px;
+    }
+              </style>
+
+              <section class="payForm">
+                <h3>付款方式</h3>
+                <table>
+                  <tbody>
+                    <tr>
+                      <th>請選擇付款方式<span class="required">需要</span></th>
+                      <td class="required">
+                        <span class="formParts required widHalf"> <input type="hidden" id="pay_id" value="{{ form.payment.vars.value }}">
+                          <select name="{{ form.payment.vars.full_name }}" id="{{ form.payment.vars.id }}"><option value="">請選擇付款方式</option></select></span>
+                        {{ form_errors(form.payment) }}
+                      </td>
+                    </tr>
+                    <tr class="card">
+                      <td colspan="2">
+                        <p class="note">
+                        <span class="important">※選擇信用卡付款的客人請注意※</span><br>
+                        （１）本產品是由日本直接寄送，視同海外交易。故當您選擇信用卡付款時，會因為每間信用卡公司的規定不同，以及您與信用卡公司的合約內容不同，產生額外費用。由於上述原因，您的信用卡對帳單中扣除的商品價格，會與本頁面的表示價格有落差（受日幣匯率浮動影響）。另外，您也可能需要支付國外交易手續費，此費用是由信用卡公司收取，本公司恕不負擔。<br>
+                        （２）退款時，依當下匯率進行退款。因退款所產生的任何手續費，本公司恕不負擔，敬請見諒。<br>
+                        （３）若您對匯率與國外交易手續費有任何疑問，請聯絡您的信用卡發卡公司查詢，本客服中心無法代查，敬請見諒。<br>
+                          （４）若您選擇以信用卡訂購「定期方案」，則視同您同意授權日商優橋股份有限公司在定期方案未被取消的期間內，於每期出貨前主動固定以信用卡扣款。</p>
+                      </td>
+                    </tr>
+
+                    <tr class="card">
+                      <th>信用卡卡號<span class="required">需要</span></th>
+                      <td class="required"><span class="formParts required widLong">{{ form_widget(form.cardno, { 'attr': {'placeholder': "1234567890123456",'class':"checkNumber"} }) }}{{ form_errors(form.cardno) }}</span><br>
+                        請用半角數字輸入</td>
+                    </tr>
+                    <tr class="card">
+                      <th>安全碼<span class="required">需要</span></th>
+                      <td class="required"><span class="formParts required">{{ form_widget(form.csc) }}{{ form_errors(form.csc) }}</span><br>
+                        ・如使用VISA，MasterCard，JCB，Diners時，（請參照下圖A）<br>
+                        卡片背面簽名欄末三碼數字<br>
+                        ・如使用American Express時，（請參照下圖B）<br>
+                        卡片正面右上（或者左上）的四碼數字<br>
+                        <img src="{{ asset("images/securitycode.gif") }}"  alt="securitycode" title="securitycode" />
+                      </td>
+                    </tr>
+                    <tr class="card">
+                      <th>信用卡有效日期<span class="required">需要</span></th>
+                      <td class="required"><span class="formParts required">{{ form_widget(form.exp_mm) }}</span>&nbsp;/&nbsp;<span class="formParts">{{ form_widget(form.exp_yy) }}</span>{{ form_errors(form.exp_mm) }}{{ form_errors(form.exp_yy) }}
+                        <br>
+                        ※請注意，通常有效日期為月／年的順序表示
+                      </td>
+                    </tr>
+                    <input type="hidden" name="{{ form.paymode.vars.full_name }}" id="{{ form.paymode.vars.id }}" value="1">
+
+                    {% if form.paytimes is defined %}
+                      <tr class="card">
+                        <th>分割的次數<span class="required">需要</span></th>
+                        <td class="required"><span class="formParts required">{{ form_widget(form.paytimes) }}{{ form_errors(form.paytimes) }}</span></td>
+                      </tr>
+                    {% endif %}
+
+                    <tr class="after_pay">
+                      <th><img src="{{ asset("images/afterpay.png") }}"></th>
+                      <td>
+                        <p>「<span class="important">出貨日隔天起算9天內</span>」再前往<span class="important">便利超商</span>或者是<span class="important">ATM付款</span>的付款方式。</p>
+                        <p>繳款代碼會以E-mail等方式寄送，再至附近的便利超商或ATM繳款即可。</p>
+                        <p><span class="important">您將可能收到來自【後付款服務中心】的email，或致電與您確認訂單資訊,屆時敬請協助配合。</span></p>
+                        <p>&nbsp;</p>
+                        <p>「後付款」，為「後付款」支付服務提供公司（三環亞洲股份有限公司）所提供的服務。</p>
+                        <p>顧客訂購商品時適用「後付款」服務，於服務範圍内提供個人情報並且讓渡商品代金債權。</p>
+                        <p>請點選「後付款」的標誌，確認詳細內容。 </p>
+                        <p>&nbsp;</p>                        
+                        <p><img src="{{ asset("images/afterpay02.jpg") }}"></p>
+                        <p><a href="https://www.afterpay.com.tw/customer" target="_blank">https://www.afterpay.com.tw/customer</a></p>
+                        <p class="mB5">親愛的顧客請確認所有規約後，開始訂購商品。 </p>                     　 
+                        <p>【注意事項】</p>
+                        <p>・請於收到付款通知後9天以内繳款。</p>
+                        <p>・使用「後付款」服務的金額上限為，（含複数店舗）累計10,000元(NTD)。 超過10,000元(NTD)時，請使用其他結帳方式。</p>
+                        <p>・購物時如使用「後付款」服務，需要進行能否利用此服務之審査。審査結果如為「不可」時， 請選擇使用其他的結帳方式。 </p>
+                        <p>・至繳費期限為止，如未完成繳納 ，除了以年率5%（日息1.370/10000）作為延遲利息外， 另需加上延遲利息的年率20%（日息5.480/10000）作為延遲損害金，一併請求支付。</p>
+                      </td>
+
+                    </tr>
+                  </tbody>
+                </table>
+                {% if has_paypal %}
+						<div class="paypelArea">
+                
+                  	<div class="linkPaypal">
+                    <p class="guidance-paypal">選擇PayPal付款的顧客，請按此繼續完成訂購。</p>
+                    <p class="guidance">＼只需30秒！／</p>
+                    <div id="paymentMethods"></div>
+                    {% if app.session.has('paypal_error') %}
+                      <span class="error">{{ app.session.get('paypal_error') }}</span>
+                      {{ app.session.remove('paypal_error') }}
+                    {% endif %}
+                  	</div>
+                
+                	</div>
+						{% endif %}
+              </section>
+
+              {% if formOption.delivery_abroad_fix != "" %}
+					<input type="hidden" name="ec_client_landing_page_type[delivery_abroad]" value="{{formOption.delivery_abroad_fix}}" {% if has_paypal %} id="ec_client_landing_page_type_delivery_abroad" {% endif %}>
+					{% else %}
+              <section class="payForm">
+                <h3>送貨方式</h3>
+                <table>
+                  <tbody>
+                    <tr>
+                      <th>送貨方式<span class="required">需要</span></th>
+                      <td class="required">
+                        <span id="delivery_name">選擇國家後，系統會為您自動選擇發貨方式。</span>
+                        <span class="formParts required"><input type="hidden" id="del_id" value="{{ form.delivery_abroad.vars.value }}">
+                          <select name="{{ form.delivery_abroad.vars.full_name }}" id="{{ form.delivery_abroad.vars.id }}"><option value="">請選擇發貨方式</option></select></span>
+                        {{ form_errors(form.delivery_abroad) }}
+
+
+                        <input type="hidden" id="ec_client_landing_page_type_delivery_day" name="ec_client_landing_page_type[delivery_day]" value="">
+                        <input type="hidden" id="ec_client_landing_page_type_delivery_time" name="ec_client_landing_page_type[delivery_time]" value="">
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+					{% endif %}
+
+
+              {% if not totalStock == 0 %}
+                <p class="cartButton"><button type="button" class="btnCartIn" id="btnSend"><i class="fa fa-2x fa-shopping-cart"></i>完成購買</button></p>
+                <ul class="linkPrivacy">
+                  <li>※點擊完成購買按鈕後，視為同意<a href="/" target="_blank">個人隱私權政策</a>。</li>
+                  <li>※關於商品介紹可能會以電子郵件形式發送，點擊完成購買按鈕後，視為同意。</li>
+                </ul>                
+              {% else %}
+                <p class="noStock">在庫なし</p>
+              {% endif %}
+            </div>
+          </section>
+      </article>
+       
+     <!-- 返品
+      <div class="rtnUnit">
+        <p><span class="atnTxt">【退換貨辦法】</span></p>
+        <ul>
+          <li>※若您需要申請退換貨，請務必事先與我們聯絡。</li>
+          <li>※收到貨品後（商品送達簽收日）隔天起算7天內提出申請，且商品為未開封狀態，即可為您辦理退換貨。</li>
+          <li>※退換貨產生的郵資，以及退款所需的手續費用，皆由顧客自行負擔，敬請見諒。</li>
+        </ul>
+
+        <p><span class="atnTxt">【台灣客服中心】</span><br>免付費電話：0800-012-775<br>（服務時間：週一至週日9:00~21:00）<br>電子郵件：service@byjapan.tw</p>
+      </div>
+	 -->
+
+      <!-- レート情報 -->
+      <input type="hidden" name="ec_client_landing_page_type[option1]" value="" >
+      <input type="hidden" name="ec_client_landing_page_type[option2]" value="" >
+      <input type="hidden" name="ec_client_landing_page_type[option3]" value="" >
+      <input type="hidden" name="ec_client_landing_page_type[option4]" value="" >
+      <input type="hidden" name="ec_client_landing_page_type[option5]" value="" >
+      <!-- /レート情報 -->
+
+
+      {% if (formOption.input_option) %}
+     {% for key,option in formOption.input_option %}
+            {% if (app.session.get(key)) %}
+              {% if (app.request.get(key)) %}
+                {{ app.session.set(key, app.request.get(key)) }}
+              {% endif %}
+              <input type="hidden" name="ec_client_landing_page_type[{{option}}]" value="{{ app.session.get(key) }}" >
+            {% elseif (app.request.get(key)) %}
+              {{ app.session.set(key, app.request.get(key)) }}
+              <input type="hidden" name="ec_client_landing_page_type[{{option}}]" value="{{ app.request.get(key) }}" >
+            {% endif %}
+      {% endfor %}
+ {% endif %}
+
+    </form>
+        </div>
+  </div>
+
+
+<script type="text/javascript">
+$(function(){
+  
+  var dt = new Date();
+  // $(".datepicker").datepicker("setDate", (dt.getFullYear() - 30) + "-" +  (dt.getMonth() + 1) + "-" + dt.getDate());
+});
+</script>
+<script>
+var prices =  {};
+var credit_card_id;
+var express_pay_id;
+var after_pay_id;
+var paypal_pay_id;
+
+{% for ps in product.productSku %}
+  prices['{{ps.id}}'] = {{ ps.price }};
+{% endfor %}
+{% set credit_card_id = "" %}
+{% set express_pay_id = "" %}
+{% set paypal_pay_id = "" %}
+{% set after_pay_id = "" %}
+
+{% for productItem in productArray %}
+ {% set productSelectId = get_entity_manager().getRepository('EcCoreBundle:ProductSku').find(productItem.skuId) %}
+ {% set productPayments = get_entity_manager().getRepository('EcCoreBundle:Product').find(productSelectId.product.id) %}
+  
+ {% for payment in productPayments.payments %}
+  {% if payment.name == "credit" %}
+   {% if not credit_card_id %}
+    {% set credit_card_id = payment.id %}
+	 credit_card_id = "{{credit_card_id}}";
+	{% endif %}
+  {% endif %}
+ {% if payment.name == "信用卡" %}
+  {% if not express_pay_id %}
+   {% set express_pay_id = payment.id %}
+	 express_pay_id = "{{express_pay_id}}";
+  {% endif %}
+ {% endif %}
+ {% if payment.name == "paypal" %}
+  {% if not paypal_pay_id %}
+   {% set paypal_pay_id = payment.id %}
+   paypal_pay_id = "{{paypal_pay_id}}";
+  {% endif %}
+ {% endif %}
+ {% if payment.name == "afterpay" %}
+	{% if not after_pay_id %}
+   {% set after_pay_id = payment.id %}
+   after_pay_id = "{{after_pay_id}}";
+  {% endif %}
+ {% endif %}
+{% endfor %}
+{% endfor %}
+
+var FMY,JPY,ratio;
+var lcFormOption = {
+  district_tr_reject: true,
+  currency_abroad: "", //latestjsonを上書きする場合
+  currency_jp: "", //latestjsonを上書きする場合
+  hyphen_reject: true,
+  deliveryTime: false,
+  country_option_reject:  [1]
+}
+var countryFormReject = {
+  11: {"city_tr": true}
+}
+var validationInit = {
+	"{{form.last_name.vars.id}}": {"required": true,},
+	"{{form.first_name.vars.id}}": {"required": true,},
+   //"{{form.locality.vars.id}}": {"required": true},
+  "city": {"required": true},
+  "street": {"required": true},
+	"{{form.zipcode.vars.id}}": {"required": true,"number": true},
+	"{{form.street.vars.id}}": {"required": true},
+	"{{form.tel.vars.id}}": {"required": true,"number": true,"eq":10},
+	"{{form.email.vars.id}}": {"required": true,"email": true},
+  "{{form.payment.vars.id}}": {"required": true},
+  "{{form.delivery_abroad.vars.id}}": {"required": true}
+}
+
+var validationErrorWording = {
+  "required": {
+    "def": "入力してください.",
+    "zh-hk": "請輸入."
+  },
+  "required_select": {
+    "def": "項目を選択してください.",
+    "zh-hk": "請輸入."
+  },
+  "min": {
+    "def": "{min}文字以上入力してください",
+    "zh-hk": "請輸入至少{min}個字符"
+  },
+  "max": {
+    "def": "{max}文字以内で入力してください",
+    "zh-hk": "請輸入{max}個字符以內"
+  },
+  "eq": {
+    "def": "{eq}文字で入力してください",
+    "zh-hk": "請輸入{eq}個字母"
+  },
+  "number": {
+    "def": "半角数字で入力してください",
+    "zh-hk": "半形數字10個字元（不要符號）"
+	},
+	"alpha": {
+    "def": "半角英字で入力してください",
+    "zh-hk": "Please enter only alphabet."
+  },
+  "katakana": {
+    "def": "カタカナで入力してください",
+    "zh-hk": "請輸入片假名"
+  },
+  "email": {
+    "def": "正しいメールアドレスを入力してください",
+    "zh-hk": "這個郵件地址不正確 "
+  },
+  "noHtml": {
+    "def": "HTMLタグはご利用になれません",
+    "zh-hk": "HTML無法輸入"
+  }
+}
+</script>
+{% TemplateInclude "jsModule" %}

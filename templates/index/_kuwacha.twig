@@ -1,0 +1,54 @@
+{{ init_language(1) }}
+{{ init_currency(148) }}
+
+{% set slug_name = 'kuwacha' %}
+
+{% set productArray = [
+{"skuId" : '4',"regular_interval" : ''},
+{"skuId" : '5',"regular_interval" : ''},
+{"skuId" : '6',"regular_interval" : ''}
+]%}
+{% set formOption = {
+  'quantity0disp': false, 
+  'delivery_abroad_fix': "", 
+  'productDefaultSelect': true, 
+  'deliveryDefaultSelect': false, 
+  'paymentDefaultSelect': false, 
+  'currency_unit_ow': "",
+  'country': "11", 
+  'input_option': {"tw":"option6","aid":"option8"}
+} %}
+{% set productDef = get_entity_manager().getRepository('EcCoreBundle:ProductSku').find(productArray.0.skuId) %}
+{% set product = get_entity_manager().getRepository('EcCoreBundle:Product').find(productDef.product.id) %}
+
+{% set title = '薩摩桑葉茶' %}
+{% TemplateInclude "html head" %}
+
+<section class="l-lp">
+  <img src="{{ asset("assets/img/lp02_01.jpg") }}" alt=""/>
+  <img src="{{ asset("assets/img/lp02_02.jpg") }}" alt=""/>
+  <a href="#contents" class="lp-link">
+  	 <img src="{{ asset("assets/img/lp02_03.jpg") }}" alt=""/>
+  </a>
+  <a href="#contents" class="lp-link" onclick="valueSet('5');">
+    <img src="{{ asset("assets/img/lp02_04.jpg") }}" alt=""/>
+  </a>
+  <a href="#contents" class="lp-link" onclick="valueSet('6');">
+    <img src="{{ asset("assets/img/lp02_05.jpg") }}" alt=""/>
+  </a>
+  <img src="{{ asset("assets/img/lp02_06.jpg") }}" alt=""/>
+  <img src="{{ asset("assets/img/lp02_07.jpg") }}" alt=""/>
+  <img src="{{ asset("assets/img/lp02_08.jpg") }}" alt=""/>
+  <img src="{{ asset("assets/img/lp02_09.jpg") }}" alt=""/>
+  <img src="{{ asset("assets/img/lp02_10.jpg") }}" alt=""/>
+  <img src="{{ asset("assets/img/lp02_11.jpg") }}" alt=""/>
+  <img src="{{ asset("assets/img/lp02_12.jpg") }}" alt=""/>
+  <img src="{{ asset("assets/img/lp02_13.jpg") }}" alt=""/>
+  <img src="{{ asset("assets/img/lp02_14.jpg") }}" alt=""/>
+  <img src="{{ asset("assets/img/lp02_15.jpg") }}" alt=""/>
+  <img src="{{ asset("assets/img/lp02_16.jpg") }}" alt=""/>
+</section>
+ 
+<div class="lp-form">
+	{% TemplateInclude "landing_page_module_common" %} 
+</div>
