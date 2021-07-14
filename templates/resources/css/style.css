@@ -1,0 +1,82 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    margin: 0;
+}
+
+.main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.block {
+    position: relative;
+    margin: 0 auto;
+}
+
+.block img {
+    max-width: 100%;
+    height: auto;
+    overflow: hidden;
+    vertical-align: middle;
+    display: block;
+}
+
+.btn_box {
+    position: relative;
+    z-index: 1;
+}
+
+.btn-1 {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    width: 80%;
+    left: 10%
+}
+
+.btn_01 {
+    top: 56%;
+}
+
+.btn_02 {
+    top: 68%;
+}
+
+.btn_03 {
+    top: 55%;
+}
+
+.btn_04 {
+    top: 40%;
+}
+
+.btn_05 {
+    width: 70%;
+    top: 70%;
+    left: 25%;
+}
+
+
+/* gif */
+
+.block_010 img {
+    width: 200%;
+    max-width: 200%;
+    transform: translate(-25%, 0);
+}
+
+@media only screen and (max-width: 800px) {
+    .block_010 img {
+        width: 100%;
+        max-width: 100%;
+        transform: translate(0, 0);
+    }
+}
