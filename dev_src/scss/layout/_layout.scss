@@ -131,13 +131,23 @@
   height: 72px;
   background: url('/assets/img/video-btn.svg') no-repeat;
   cursor: pointer;
+
+  &:hover {
+    transform: scale(1.1,1.1);
+    transition: all 0.2s;
+  }
+
+  &:active {
+    transform: translate(0,1px);
+  }
 }
 
 .l-lp {
   text-align: center;
-  padding-top: 90px;
+}
 
-  @include media (sp) {
-    padding-top: 60px;
-  }
+// lp 
+.lp-form {
+  max-width: 1000px;
+  margin: 0 auto;
 }

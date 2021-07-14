@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <script src="/assets/js/common.js"></script>
     <link rel="stylesheet" href="/assets/css/style.css"/>
-    <title>Sample Project</title>
+    <title>Wakuwakuen</title>
   </head>
   <body><a id="top"></a>
     <header class="l-header">
@@ -13,7 +13,7 @@
       <div class="l-header__right">
         <ul class="l-header__list">
           <li class="l-header__item only-pc"> <a href="/">Top</a></li>
-          <li class="l-header__item product-menu"><a href="">Product</a>
+          <li class="l-header__item product-menu">Product
             <ul class="product-list">
               <li><a href="/lp01">薩摩桑葉青汁</a></li>
               <li> <a href="/lp02">薩摩桑葉茶</a></li>
@@ -21,7 +21,7 @@
           </li>
           <li class="l-header__item"> <a href="">About</a></li>
         </ul>
-        <div class="l-header__sns"><span><img src="/assets/img/ico_facebook.svg" alt=""/></span><span><img src="/assets/img/ico_insta.svg" alt=""/></span></div>
+        <div class="l-header__sns"><a href=""> <img src="/assets/img/ico_facebook.svg" alt=""/></a><a href=""> <img src="/assets/img/ico_insta.svg" alt=""/></a></div>
       </div>
     </header>
     <main class="l-main">
@@ -38,18 +38,18 @@
         <h2 class="l-products__title">Products</h2>
         <div class="l-products__list">
           <figure> <a href="#"><img class="product-img" src="/assets/img/pic_product01.png" alt="青汁"/></a>
-            <h3 class="product-title">薩摩桑葉青汁</h3>
-            <button class="product-btn">前往訂購</button>
+            <h3 class="product-title">薩摩桑葉青汁</h3><a href="/aojiru">
+              <button class="product-btn">前往訂購</button></a>
           </figure>
           <figure> <a href="#"><img class="product-img" src="/assets/img/pic_product02.png" alt="茶"/></a>
-            <h3 class="product-title">薩摩桑葉茶</h3>
-            <button class="product-btn">前往訂購</button>
+            <h3 class="product-title">薩摩桑葉茶</h3><a href="/aojiru">
+              <button class="product-btn">前往訂購</button></a>
           </figure>
         </div>
       </section>
       <section class="l-about">
         <h3 class="l-about__title">About Wakuwakuen</h3>
-        <video id="video" controls="controls" width="100%">
+        <video id="video" muted="muted" poster="/assets/img/video-poster.png" width="100%">
           <source src="/assets/img/wakuwakuen_pr_light.mp4" type="video/mp4"/>
         </video>
         <div id="video-btn"></div>
