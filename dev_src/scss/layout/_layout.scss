@@ -141,12 +141,53 @@
   }
 }
 
+// lp 
 .l-lp {
   text-align: center;
 }
 
-// lp 
 .lp-form {
   max-width: 1000px;
   margin: 0 auto;
+}
+
+// tokushoho
+.l-tokushoho {
+  padding: 90px 20px 20px;
+}
+
+.lawTable {
+  max-width: 1000px;
+  margin: 0 auto;
+
+  & caption {
+    text-align: center;
+    font-weight: bold;
+    font-size: 3.2rem;
+    margin: 20px 0;
+  }
+
+  &:not(:first-child) {
+    margin-top: 60px;
+  }
+
+  & tbody {
+    
+    & th {
+      padding: 5px 10px;
+      width: 40%;
+      font-weight: 500;
+      background-color: $c_gray_light;
+      vertical-align: top;
+    }
+    & td {
+      padding: 5px 10px;
+      width: 60%;
+      vertical-align: top;
+
+      & span {
+        color: $c_primary;
+      }
+    }
+  }
 }
