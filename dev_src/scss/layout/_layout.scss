@@ -1,6 +1,10 @@
 
 .l-mainvisual {
   position: relative;
+
+  @include media (sp) {
+    padding-top: 60px;
+  }
 }
 
 .l-products {
@@ -63,6 +67,10 @@
   border-radius: 10px;
   padding: 0 0 3px 28px;
 
+  @include media (sp) {
+    font-size: 1.6rem;
+  }
+
   &::after {
     content: '';
     display: inline-block;
@@ -107,10 +115,10 @@
   & > img {
     width: 100%;
     height: 630px;
-    object-fit: contain;
+    object-fit: cover;
 
     @include media (sp) {
-      height: auto;
+      height: 185px;
     }
   }
 } 
@@ -184,10 +192,6 @@
       padding: 5px 10px;
       width: 60%;
       vertical-align: top;
-
-      & span {
-        color: $c_primary;
-      }
     }
   }
 }

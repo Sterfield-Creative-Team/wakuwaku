@@ -22,29 +22,49 @@ export default () => {
     const video = document.querySelector("video");
     const videoBtn = document.getElementById("video-btn");
 
-    videoBtn.addEventListener('click', (event) => {
+    if (videoBtn != undefined ) {
 
-      if (video.paused) {
-        video.play();
-        videoBtn.style.display = "none";
-        video.setAttribute("controls", "controls");
+      videoBtn.addEventListener('click', (event) => {
+
+        if (video.paused) {
+          video.play();
+          videoBtn.style.display = "none";
+          video.setAttribute("controls", "controls");
+        } else {
+          video.pause();
+        }
+
+      });
+
+      video.addEventListener('click', (event) => {
+
+        const style = window.getComputedStyle(videoBtn);
+        const value = style.getPropertyValue('display');
+
+        if (value == "none") {
+          video.pause();
+          videoBtn.style.display = "block";
+          video.removeAttribute("controls");
+        }
+
+      });
+
+    }
+
+    // sp ハンバーガーメニュー
+    $('.btn__trigger').on('click',function() {
+      $(this).toggleClass('active');
+
+      if ($(this).hasClass('active')) {
+          $('.navi').addClass('active');
       } else {
-        video.pause();
+          $('.navi').removeClass('active');
       }
-
     });
 
-    video.addEventListener('click', (event) => {
-
-      const style = window.getComputedStyle(videoBtn);
-      const value = style.getPropertyValue('display');
-
-      if (value == "none") {
-        video.pause();
-        videoBtn.style.display = "block";
-        video.removeAttribute("controls");
-       }
-
+    $(".navi__btn").on("click",function(){
+      $(this).next().slideToggle();
+      $(this).toggleClass('isActive');
     });
 
   })

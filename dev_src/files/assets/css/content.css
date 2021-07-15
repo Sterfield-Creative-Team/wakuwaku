@@ -1059,3 +1059,19 @@ hr{
 
 .ftb { position: fixed; bottom: 10px; right: 10px; }
 .ftb img { width: 110px;}
+
+
+/* wakuwakuen add */
+@media screen and (max-width: 768px){
+	table {
+		table-layout: fixed;
+	}
+
+	.pageContent .payForm select {
+		width: 90%;
+	}
+
+	#cart #priceTable tr:first-child th {
+		padding-left: 10px;
+	}
+}

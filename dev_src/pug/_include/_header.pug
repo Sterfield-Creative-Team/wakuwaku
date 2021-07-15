@@ -4,8 +4,8 @@ header.l-header
       img(src="/assets/img/logo.svg", alt="")
   
   .l-header__right
-    ul.l-header__list
-      li.l-header__item.only-pc 
+    ul.l-header__list.only-pc
+      li.l-header__item
         a(href="/") Top
       li.l-header__item.product-menu Product
         ul.product-list
@@ -16,8 +16,38 @@ header.l-header
       li.l-header__item 
         a(href="") About
 
-    .l-header__sns
+    .l-header__sns.only-pc
+      a(href="") 
+        img(src="/assets/img/ico_login.svg", alt="")
       a(href="") 
         img(src="/assets/img/ico_facebook.svg", alt="")
       a(href="") 
         img(src="/assets/img/ico_insta.svg", alt="")
+    
+    .btn__trigger.only-sp
+      span
+      span
+      span
+    nav.navi.only-sp
+      ul.navi__loginList
+        li.navi__loginItem
+          a(href="#") 帳戶登入
+        li.navi__loginItem
+          a(href="#") 建立帳戶
+
+      ul.navi__menuList
+        li.navi__menuItem
+          a.navi__btn ・Product
+          div.navi__product
+            p
+              a(href="#")  &gt; 薩摩桑葉青汁
+            p
+              a(href="#")  &gt; 薩摩桑葉茶
+        li.navi__menuItem 
+          a(href="#") ・About
+
+      div.navi__sns
+        a(href="") 
+          img(src="/assets/img/ico_insta.svg", alt="")
+        a(href="") 
+          img(src="/assets/img/ico_facebook.svg", alt="")
