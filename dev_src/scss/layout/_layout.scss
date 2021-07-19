@@ -125,6 +125,10 @@
     @include media (sp) {
       height: 185px;
     }
+
+    @media screen and (min-width: 1500px) {
+      height: 800px;
+    }
   }
 } 
 
