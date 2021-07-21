@@ -657,6 +657,7 @@
 	color: #333;
 	border-bottom: 1px solid #ccc;
 	vertical-align: middle;
+	text-align: center;
 }
 .pageContent .payForm table th .required {
 	color: #f00;
@@ -1062,6 +1063,14 @@ hr{
 
 
 /* wakuwakuen add */
+.afterService {
+	font-size: .7em;
+	color: #666;
+	padding: 5%;
+	width: 50%;
+	margin: 0 auto;
+}
+
 @media screen and (max-width: 768px){
 	table {
 		table-layout: fixed;
@@ -1073,5 +1082,9 @@ hr{
 
 	#cart #priceTable tr:first-child th {
 		padding-left: 10px;
+	}
+
+	.afterService {
+		width: 100%;
 	}
 }

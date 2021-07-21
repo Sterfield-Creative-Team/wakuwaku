@@ -53,15 +53,10 @@
   }
 
   &__addr {
-    height: 125px;
     background-color: $c_primary;
     color: $c_bg;
     font-size: 2rem;
     padding: 20px 0;
-
-    @include media (tab) {
-      height: 200px;
-    }
   }
 
   &__btn {
