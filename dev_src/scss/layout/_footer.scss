@@ -43,12 +43,18 @@
       }
     }
 
+    &-fb {
+      & >  .l-footer__sns-btn {
+        background-color: #1877F2;
+      }
+
+    }
+
     &-btn {
       width: 350px;
       height: 100px;
       margin-top: 50px;
       border-radius: 10px;
-      background-color: #1877F2;
     }
   }
 
